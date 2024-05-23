@@ -1,25 +1,53 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Login from '../views/LoginView.vue'
+import Dashboard from "../views/DashBoard.vue"
+import ConsultingRoomDetail from "../views/ConsultingRoom/RoomDetail.vue"
+import FormAppointment from "../views/Public_gen_appointment.vue"
+import Patients from "../views/Px/PxList.vue"
+import PatientsDetail from "../views/Px/PxDetail.vue"
+import store from '@/store';
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView
+    name: 'login',
+    component: Login,
+    meta: { public: true }
+  },
+  
+  {
+    path: '/dashboard/consultingroom/patients-all/:id',
+    name: 'patients',
+    component: Patients,
+    meta: { requiresAuth: true },
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: function () {
-      return import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-    }
-  }
+    path: '/dashboard/detail/patient/:id',
+    name: 'patients_detail',
+    component: PatientsDetail,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/dashboard/consultingroom/:id",
+    name: "consulting_room_detail",
+    component: ConsultingRoomDetail,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/appointment/gen/:id",
+    name: "appointment_gen",
+    component: FormAppointment,
+    meta: { public: true }
+  },
+  {
+    path: "/dashboard",
+    name: "dashboard",
+    component: Dashboard,
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = new VueRouter({
@@ -28,4 +56,13 @@ const router = new VueRouter({
   routes
 })
 
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = store.getters.isAuthenticated;
+
+  if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
+    next({ name: 'login' });
+  } else {
+    next();
+  }
+});
 export default router
