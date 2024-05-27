@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="showDialog" max-width="600px" persistent>
     <v-card>
-      <h1>Cita para {{ patientName }}</h1>
+      <h1 class="mt-5">Cita para {{ patientName }}</h1>
       <v-form ref="form" @submit.prevent="sendForm">
         <v-card-text>
           <v-container>
@@ -98,7 +98,7 @@ export default {
     createAppointmentDialog:Boolean,
     services:Array,
     patientName:String,
-    id_consultingRoom:Number,
+    id_consultingRoom:String,
     id_patient:String
   },
   components:{

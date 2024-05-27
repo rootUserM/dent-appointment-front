@@ -65,4 +65,9 @@ router.beforeEach((to, from, next) => {
     next();
   }
 });
+router.afterEach((to) => {
+  // Update document title based on the current route
+  document.title = to.meta.title || 'Expert Appointment';
+});
+
 export default router

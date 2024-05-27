@@ -1,8 +1,6 @@
 <template>
     <div>
-    
       <Nav></Nav>
-   
     <v-main class=" " >
       <v-row class="mx-10 my-10" v-if="this.consulting_room.data" justify="center">
         <v-col cols="12" md="6">
@@ -63,7 +61,6 @@
         </v-col>
       </v-row>
       <v-row justify="center" class="mx-2 my-2">
-        
           <v-col>
             <h2 class="mx-3 my-3">Pagos</h2>
           <v-data-table
@@ -109,7 +106,6 @@
         </v-col>
       </v-row>
     </v-main>
-
     <v-dialog
       v-model="CreateServiceDialog"
       max-width="600px"
@@ -120,22 +116,24 @@
         </v-card-title>
         <v-card-text>
           <v-container>
-            <v-row>
-                <v-col cols="6">
-                    <v-text-field
-                  label="Nombre*"
-                  required
-                  v-model="form.name"
-                ></v-text-field>
-                </v-col>
-                <v-col cols="6">
-                    <v-text-field
-                  label="Precio*"
-                  required
-                  v-model="form.price"
-                ></v-text-field>
-                </v-col>
-            </v-row>
+            <v-form ref="serviceForm">
+              <v-row>
+                    <v-col cols="6">
+                      <v-text-field
+                    label="Nombre*"
+                    required
+                    v-model="form.name"
+                  ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                      <v-text-field
+                    label="Precio*"
+                    required
+                    v-model="form.price"
+                  ></v-text-field>
+                  </v-col>
+              </v-row>
+          </v-form>
           </v-container>
           <small>* indica campo requerido</small>
         </v-card-text>
@@ -230,8 +228,9 @@ export default {
        async submit(){
             try {
                 this.form.id_consultingRoom = this.$route.params.id
-                await this.createService(this.form)
-                this.CreateServiceDialog = false
+                await this.createService(this.form);
+                this.CreateServiceDialog = false;
+                this.$refs.serviceForm.reset();
                 this.services = await this.getServicesConsultingRoom(this.$route.params.id)
             } catch (error) {
                 console.log(error)

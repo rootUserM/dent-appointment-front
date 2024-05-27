@@ -15,19 +15,25 @@
                         <td>{{dataComponent.date}}</td>
                     </tr>
                     <tr>
-                        <td width="200px"><b>Servicio relacionado</b></td>
-                        <td>{{ (services.find(x => dataComponent.id_service == x.id) || {}).name }}</td>
+                        <td width="200px"><b>Servicio(s) relacionado(s)</b></td>
+                        <td>{{ dataComponent.payment_info.name_services.join() }}</td>
                     </tr>
                     <tr>
                         <td width="200px"><b>Nota de registro</b></td>
-                        <td>{{dataComponent.note}}</td>
+                        <td> 
+                          <v-row>
+                            <v-col>
+                              <v-btn icon @click="setToEditNote(dataComponent.note)" style="position: absolute; margin:auto 100px;"> <v-icon>mdi-pencil</v-icon></v-btn>
+                             <p v-html="dataComponent.note.replace(/\n/g, '<br>')"></p>
+                            </v-col>
+                        </v-row> 
+                      </td>
                     </tr>
                 </tbody>
             </v-simple-table>
         </v-col>
               <div class="mb-10">
                 <v-row justify="center" v-if="!this.dataComponent.payment_info.total_debt == 0">
-                  
                     <v-col cols="6">
                     <v-form ref="form">
                     <v-text-field
@@ -49,7 +55,7 @@
                   </v-col>
                 </v-row>
                 <div v-else class="mt-5 mb-5">
-                    El tratamiento fue liquidado
+                    <p style="color: #1E88E5;" class="font-italic"> El tratamiento fue liquidado</p>
                   </div>
                 <v-row v-if="dataComponent">
                   <v-data-table
@@ -58,13 +64,27 @@
                     :items-per-page="5"
                     class="elevation-1"
                   >
+                  <template v-slot:[`item.date_created`]="{item }">
+                    <span v-html="item.date_created.substring(0,10)">
+                    </span>
+                  </template>
                   </v-data-table>
                 </v-row>
+                
               </div>
             </v-col>
+            <v-row v-if="editFieldNote" class="mt-2">
+                  <v-textarea
+                  :autofocus="true"
+                  outlined
+                  label="Nota"
+                  v-model="treatment_form.note"
+                  hint="Describa procedimeinto"
+                ></v-textarea>
+                </v-row>
           </v-container>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions v-if="!editFieldNote">
           <v-spacer></v-spacer>
           <v-btn
             class="text-none"
@@ -74,7 +94,25 @@
           >
             Cerrar
           </v-btn>
-          
+        </v-card-actions>
+        <v-card-actions v-else>
+          <v-btn
+            class="text-none"
+            color="blue darken-1"
+            text
+            @click="editFieldNote =false"
+          >
+            Cancelar
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn
+            class="text-none"
+            color="blue darken-1"
+            text
+            @click="updateNote()"
+          >
+            Actualizar nota
+          </v-btn>
         </v-card-actions>
     </v-card>
   </v-dialog>
@@ -91,16 +129,12 @@ export default {
     services:Array
   },
   data: () => ({
+    editFieldNote:false,
     dialogVisible: false,
     loading: false,
     neededPrice:0,
     treatment_form: {
-      id_service: null,
-      id_patient: null,
-      id_consultingRoom: null,
-      date: null,
       note: "",
-      payment: 0.0,
     },
     payment_form: {
       contribution: 0.0,
@@ -113,7 +147,8 @@ export default {
     ],
     dataComponent:{
       payment_info:{
-        total_debt:0
+        total_debt:0,
+        name_services:[]
       },
             date:'',
             note:'',
@@ -122,7 +157,22 @@ export default {
   methods: {
     ...mapActions([
       "createPayment",
+      "updateTreatmentPatient"
     ]), 
+    setToEditNote(currentNote){
+      this.editFieldNote=true; 
+      this.treatment_form.note = currentNote +'\n'+ new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' , hour:'numeric',minute:'numeric'})+'\n';
+    },
+    async updateNote(){
+      try {
+        await this.updateTreatmentPatient({id:this.currentData.id,form:this.treatment_form})
+        this.$emit("getTreatments");
+        this.treatment_form.note = ''
+        this.editFieldNote=false; 
+      } catch (error) {
+        console.log(error)
+      }
+    },
     handleCloseDialog(){
       this.dataComponent = {
       payment_info:{},
@@ -137,11 +187,12 @@ export default {
     },
     async createPaymentFunc() {
         try {
-        this.payment_form.id_consultingRoom =  this.currentData.service_info.id_consultingRoom;
+        this.payment_form.id_consultingRoom =  this.currentData.payment_info.payments_list[0].id_consultingRoom;
         this.payment_form.id_treatment =  this.currentData.id;
         this.payment_form.contribution = parseFloat(this.payment_form.contribution);
         let result = await this.createPayment(this.payment_form);
-        this.dataComponent.payment_info.payments_list =result.data
+        if(this.dataComponent.payment_info.total_debt == this.payment_form.contribution ) this.dataComponent.payment_info.total_debt = 0;
+        this.dataComponent.payment_info.payments_list =result.data;
         this.$refs.form.reset();
         this.$emit("getTreatments");
         } catch (error) {

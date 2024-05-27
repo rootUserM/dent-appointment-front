@@ -206,8 +206,7 @@ methods:{
       this.form.patient.id_consultingRoom = this.$route.params.id
       this.form.appointmentDate = this.date
       try {
-          var response = await this.createAppointment(this.form)
-          console.log(response)
+          await this.createAppointment(this.form)
           this.showAlert = true
           this.$refs.form.reset();
           this.message = "Cita agendada"

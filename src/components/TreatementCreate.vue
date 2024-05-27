@@ -14,12 +14,14 @@
                   v-if="services.length"
                   prepend-icon="mdi-bottle-tonic-plus-outline"
                   :items="services"
-                  label="Tratamiento"
+                  label="Tratamiento(s)"
                   outlined
                   item-text="name"
                   item-value="id"
-                  v-model="treatment_form.id_service"
-                 
+                  v-model="treatment_form.services"
+                  multiple
+                  density="compact"
+                 @input="getTotalPrice()"
                 ></v-select>
               </v-row>
               <v-row justify="center">
@@ -81,6 +83,7 @@ export default {
   },
   props: ["showDialog", "currentData", "patient", "services"],
   data: () => ({
+    totalPrice:0,
     dialogVisible:false,
     loading: false,
     neededPrice:0,
@@ -90,11 +93,11 @@ export default {
             note:'',
     },
     treatment_form: {
-      id_service: null,
+      services: [],
       id_patient: null,
       id_consultingRoom: null,
       date: null,
-      note: "",
+      note:  new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' , hour:'numeric',minute:'numeric'})+'\n',
       payment: 0.0,
     },
     payment_form: {
@@ -115,6 +118,12 @@ export default {
       "createTreatment",
       "createPayment",
     ]), 
+   
+    getTotalPrice(){
+      let totalPrice= 0;
+      this.treatment_form.services.forEach(x=>{totalPrice += Number(this.services.find( y => y.id == x).price)})
+      this.totalPrice = totalPrice
+    },
     handleCloseDialog(){
       this.dataComponent = {
       payment_info:{},
@@ -156,18 +165,19 @@ export default {
   },
   computed:{
     priceRules(){
-      try {
-        let obj =  this.services.find(x => x.id == this.treatment_form.id_service)
-      return (value) => {
-        if (!value || isNaN(value) || parseFloat(value) > (obj ? obj.price : 0)) {
-          return 'El monto no debe exeder los '+ (obj ? obj.price : 0);
-        }
-        return true;
-      };
-      } catch (error) {
-        console.log(error);
-        return () => false;
-      }
+      const validateValue = (value) => {
+    if (!value || isNaN(value) || parseFloat(value) > this.totalPrice) {
+      return 'El monto no debe exeder los ' + this.totalPrice;
+    }
+    return true;
+  };
+
+  try {
+    return validateValue;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
     }
   }
 };

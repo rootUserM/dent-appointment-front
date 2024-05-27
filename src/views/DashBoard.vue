@@ -42,7 +42,7 @@
                 v-for="item in this.consulting_rooms"
                 :key="item.name"
               >
-                <td>{{ item.id }}</td>
+                <td>{{ String(item.id).substring(0,8) }}</td>
                 <td>{{ item.name }}</td>
                 <td>{{ item.address }}</td>
                 <td>{{ item.webpage }}</td>

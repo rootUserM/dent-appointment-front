@@ -14,6 +14,13 @@ const actions = {
         } catch (e) {
           console.log(e)
         }
+      },
+      async updateTreatmentPatient(_, {id,form}) {
+        try {
+          return await axios.patch('/treatments/'+id+'/',form);
+        } catch (e) {
+          console.log(e)
+        }
       }
    
 }
